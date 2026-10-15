@@ -1,0 +1,9 @@
+import {useEffect,useMemo,useState} from "react";
+import {Search,Users} from "lucide-react";
+import {getOrders} from "../lib/api";
+import type {Order} from "../types";
+export default function Customers(){
+ const[orders,setOrders]=useState<Order[]>([]),[search,setSearch]=useState("");useEffect(()=>{getOrders().then(setOrders)},[]);
+ const customers=useMemo(()=>{const map=new Map<string,{name:string;email:string;phone:string;orders:number;total:number}>();orders.forEach(o=>{const c=o.customer||{},key=c.email||c.phone||`${c.firstName}-${c.lastName}`,name=c.name||`${c.firstName||""} ${c.lastName||""}`.trim()||"Client";const cur=map.get(key)||{name,email:c.email||"—",phone:c.phone||"—",orders:0,total:0};cur.orders++;cur.total+=Number(o.total||0);map.set(key,cur)});return [...map.values()].filter(c=>`${c.name} ${c.email} ${c.phone}`.toLowerCase().includes(search.toLowerCase()))},[orders,search]);
+ return <div className="page"><section className="panel"><div className="panel-head"><div><span className="eyebrow"></span></div><div className="search-box compact"><Search size={16}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher…"/></div></div>{!customers.length?<div className="empty"><Users size={30}/><span>Aucun client trouvé.</span></div>:<div className="table-wrap"><table><thead><tr><th>Client</th><th>Email</th><th>Téléphone</th><th>Commandes</th><th>Total</th></tr></thead><tbody>{customers.map(c=><tr key={`${c.email}-${c.phone}`}><td><strong>{c.name}</strong></td><td>{c.email}</td><td>{c.phone}</td><td>{c.orders}</td><td><strong>{c.total.toFixed(2)} TND</strong></td></tr>)}</tbody></table></div>}</section></div>;
+}
